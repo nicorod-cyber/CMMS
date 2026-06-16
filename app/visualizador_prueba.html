@@ -1,0 +1,442 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>visualizador_prueba - CMMS Demo</title>
+  <style>
+    :root { color-scheme: light; font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; background: #f8fafc; color: #0f172a; }
+    * { box-sizing: border-box; }
+    body { margin: 0; min-height: 100vh; background: #f8fafc; }
+    button, input, textarea, select { font: inherit; }
+    .app { display: flex; min-height: 100vh; }
+    .sidebar { width: 260px; background: #0f172a; color: #f8fafc; display: flex; flex-direction: column; border-right: 1px solid rgba(148,163,184,.15); }
+    .brand { display: flex; align-items: center; gap: 10px; padding: 20px; border-bottom: 1px solid rgba(148,163,184,.15); }
+    .brand-dot { width: 38px; height: 38px; border-radius: 12px; background: linear-gradient(135deg,#ef4444,#1d4ed8); display:flex; align-items:center; justify-content:center; font-weight:700; }
+    .nav-list { padding: 12px; flex: 1; overflow-y: auto; }
+    .nav-item { display: block; width: 100%; text-align: left; border: 0; background: transparent; color: inherit; padding: 12px 16px; border-radius: 12px; margin-bottom: 6px; cursor: pointer; transition: background .2s, color .2s; }
+    .nav-item:hover { background: rgba(148,163,184,.12); }
+    .nav-item.active { background: rgba(248,113,113,.18); color: #fee2e2; }
+    .sidebar-footer { padding: 16px; border-top: 1px solid rgba(148,163,184,.15); font-size: 12px; line-height: 1.5; }
+    .content { flex: 1; padding: 24px; overflow:auto; }
+    .topbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 24px; }
+    .topbar h1 { margin: 0; font-size: 24px; }
+    .button { display: inline-flex; align-items: center; gap: 8px; border: 0; cursor: pointer; font-weight: 600; border-radius: 999px; padding: 10px 16px; transition: transform .15s ease, background .15s ease; }
+    .button:hover { transform: translateY(-1px); }
+    .button.primary { background: #ef4444; color: white; }
+    .button.secondary { background: white; color: #0f172a; border: 1px solid #cbd5e1; }
+    .button.flat { background: transparent; color: #0f172a; border: 1px solid rgba(255,255,255,.18); }
+    .card { background: white; border: 1px solid #e2e8f0; border-radius: 24px; padding: 20px; box-shadow: 0 15px 35px rgba(15,23,42,0.06); }
+    .grid { display: grid; gap: 20px; }
+    .grid-2 { grid-template-columns: repeat(2,minmax(0,1fr)); }
+    .grid-3 { grid-template-columns: repeat(3,minmax(0,1fr)); }
+    .badge { display: inline-flex; align-items: center; gap: 6px; border-radius: 999px; padding: 5px 12px; font-size: 12px; font-weight: 700; }
+    .badge.soft { background: #f1f5f9; color: #0f172a; }
+    .badge.red { background: #fee2e2; color: #b91c1c; }
+    .badge.green { background: #dcfce7; color: #166534; }
+    .badge.blue { background: #dbeafe; color: #1d4ed8; }
+    .badge.orange { background: #ffedd5; color: #c2410c; }
+    .section-title { display: flex; align-items: center; justify-content: space-between; font-size: 16px; font-weight: 700; margin-bottom: 16px; }
+    .section-title small { opacity: .7; font-weight: 500; }
+    .table { width: 100%; border-collapse: collapse; }
+    .table th, .table td { padding: 14px 12px; border-bottom: 1px solid #e2e8f0; text-align: left; }
+    .table th { background: #f8fafc; font-weight: 700; color: #475569; }
+    .table tr:hover { background: #f8fafc; }
+    .input, .textarea, .select { width: 100%; border: 1px solid #cbd5e1; border-radius: 14px; padding: 12px 14px; background: white; color: #0f172a; outline: none; }
+    .textarea { min-height: 120px; resize: vertical; }
+    .modal-overlay { position: fixed; inset: 0; background: rgba(15,23,42,.45); display: flex; align-items: center; justify-content: center; z-index: 50; }
+    .modal { width: min(720px, calc(100vw - 32px)); max-height: calc(100vh - 32px); overflow: auto; background: white; border-radius: 24px; padding: 24px; box-shadow: 0 30px 80px rgba(15,23,42,0.2); position: relative; }
+    .modal-close { position: absolute; top: 16px; right: 16px; border: none; background: transparent; font-size: 24px; cursor: pointer; line-height: 1; }
+    .form-grid { display: grid; gap: 16px; }
+    .alert { border-radius: 18px; padding: 16px; background: #fef3c7; border: 1px solid #fcd34d; color: #92400e; margin-bottom: 20px; }
+    .link-button { background: transparent; border: none; color: #0f172a; cursor: pointer; text-decoration: underline; padding: 0; font-size: 13px; }
+    .user-card { border: 1px solid #e2e8f0; border-radius: 20px; padding: 18px; }
+    .user-card button { margin-top: 12px; }
+    .tag-grid { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+    @media(max-width: 1080px) { .grid-3, .grid-2 { grid-template-columns: 1fr; } .sidebar { width: 100%; position: relative; } .app { flex-direction: column; } }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="brand"><div class="brand-dot">CM</div><div><div style="font-size:16px;font-weight:700;">CMMS Demo</div><div style="font-size:12px;opacity:.8;">HTML interactivo</div></div></div>
+      <div class="nav-list" id="sidebarNav"></div>
+      <div class="sidebar-footer">
+        <div><strong id="currentUserName"></strong></div>
+        <div style="margin-top:8px;">Permisos:</div>
+        <div id="currentUserPerms" style="margin-top:8px;display:flex;flex-wrap:wrap;gap:6px;"></div>
+      </div>
+    </aside>
+    <main class="content">
+      <div class="topbar">
+        <div>
+          <h1 id="pageTitle">Dashboard</h1>
+          <p id="pageSubtitle" style="margin:4px 0 0;color:#64748b;">Visualiza la aplicaci�n CMMS en HTML plano.</p>
+        </div>
+        <button class="button secondary" id="resetDemo">Restaurar demo</button>
+      </div>
+      <div id="pageContent"></div>
+    </main>
+  </div>
+  <div id="modalRoot"></div>
+  <script>
+    const appData = {
+      usuarios: [
+        { id:'U001', nombre:'Carlos Henr�quez', email:'carlos.henriquez@minera.cl', rol:'Supervisor de Mantenimiento', permisos:['mantenimiento.ver','mantenimiento.editar','bodega.ver','planificacion.ver','reportes.ver','documentos.ver','usuarios.ver','usuarios.editar','usuarios.crear','configuracion.ver'] },
+        { id:'U002', nombre:'Pedro Soto', email:'pedro.soto@minera.cl', rol:'Planificador', permisos:['mantenimiento.ver','mantenimiento.editar','planificacion.ver'] },
+        { id:'U003', nombre:'Bodega Norte', email:'bodega.norte@minera.cl', rol:'Bodeguero', permisos:['bodega.ver','bodega.editar'] },
+        { id:'U004', nombre:'Juan P�rez', email:'juan.perez@minera.cl', rol:'T�cnico Mec�nico', permisos:['mantenimiento.ver'] },
+      ],
+      ordenes: [
+        { id:'OT001', numero:'OT-2024-0845', equipo:'Cami�n Caterpillar 797F', faena:'Faena Norte', descripcion:'Reparaci�n sistema de refrigeraci�n motor.', estado:'en_progreso', criticidad:'critica', tecnico:'Juan P�rez' },
+        { id:'OT002', numero:'OT-2024-0840', equipo:'Excavadora Hitachi EX5600', faena:'Faena Sur', descripcion:'Diagn�stico y reparaci�n falla el�ctrica.', estado:'abierta', criticidad:'critica', tecnico:'Miguel �ngel Rojas' },
+        { id:'OT003', numero:'OT-2024-0850', equipo:'Perforadora Sandvik DP1500', faena:'Faena Norte', descripcion:'Reemplazo l�nea hidr�ulica.', estado:'abierta', criticidad:'alta', tecnico:'Andr�s Contreras' },
+      ],
+      solicitudes: [
+        { id:'SM001', numero:'SM-2024-0125', equipo:'Cami�n Caterpillar 797F', faena:'Faena Norte', solicitante:'Carlos M�ndez', fecha:'2024-06-10', tipoFalla:'Sobrecalentamiento motor', descripcion:'El motor principal presenta temperatura anormal.', criticidad:'critica', estado:'aprobada', otGenerada:'OT-2024-0845' },
+        { id:'SM002', numero:'SM-2024-0126', equipo:'Excavadora Hitachi EX5600', faena:'Faena Sur', solicitante:'Ana L�pez', fecha:'2024-06-10', tipoFalla:'Falla sistema el�ctrico', descripcion:'Panel el�ctrico principal sin energ�a.', criticidad:'critica', estado:'aprobada', otGenerada:'OT-2024-0840' },
+        { id:'SM003', numero:'SM-2024-0127', equipo:'Perforadora Sandvik DP1500', faena:'Faena Norte', solicitante:'Roberto Silva', fecha:'2024-06-11', tipoFalla:'Fuga hidr�ulica', descripcion:'Fuga visible en l�nea hidr�ulica.', criticidad:'alta', estado:'nueva' },
+      ],
+      alertas: [
+        { id:'AL001', tipo:'critica', titulo:'OT Cr�tica Vencida', mensaje:'La OT-2024-0840 lleva 4 d�as abierta sin inicio.', faena:'Faena Sur' },
+        { id:'AL002', tipo:'critica', titulo:'Equipo Detenido', mensaje:'CAT 797F lleva 4 d�as detenido por mantenimiento.', faena:'Faena Norte' },
+        { id:'AL003', tipo:'advertencia', titulo:'Stock Cr�tico', mensaje:'Pastilla freno 930E solo tiene 1 juego.', faena:'Faena Norte' },
+      ],
+      tecnicos: [
+        { nombre:'Juan P�rez', cargaSemanal:38, capacidad:48, faena:'Faena Norte', especialidad:'Mec�nica' },
+        { nombre:'Miguel �ngel Rojas', cargaSemanal:42, capacidad:48, faena:'Faena Sur', especialidad:'El�ctrica' },
+        { nombre:'Andr�s Contreras', cargaSemanal:30, capacidad:44, faena:'Faena Norte', especialidad:'Hidr�ulica' },
+      ],
+      equipos: [
+        { codigo:'CAM-001', nombre:'Cami�n Komatsu 930E-05', faena:'Faena Norte', estado:'disponible', criticidad:'alta' },
+        { codigo:'CAM-002', nombre:'Cami�n Caterpillar 797F', faena:'Faena Norte', estado:'en_mantenimiento', criticidad:'critica' },
+        { codigo:'PER-001', nombre:'Perforadora Sandvik DP1500', faena:'Faena Norte', estado:'operando', criticidad:'alta' },
+      ],
+      kpis: [
+        { label:'OT Abiertas', valor:'142', trend:'-12', type:'down' },
+        { label:'OT Cr�ticas', valor:'8', trend:'+3', type:'up' },
+        { label:'Backlog (d�as)', valor:'4.2', trend:'-0.8', type:'down' },
+        { label:'Disp. Flota', valor:'89.4%', trend:'-2.1', type:'down' },
+        { label:'Stock Cr�tico', valor:'6', trend:'+2', type:'up' },
+        { label:'SM Pendientes', valor:'23', trend:'-5', type:'down' },
+      ],
+    };
+
+    const routes = [
+      { label:'Dashboard', path:'dashboard', permission:null },
+      { label:'Mantenimiento OT', path:'mantenimiento/ot', permission:'mantenimiento.ver' },
+      { label:'Solicitudes SM', path:'mantenimiento/sm', permission:'mantenimiento.ver' },
+      { label:'Activos', path:'activos', permission:'mantenimiento.ver' },
+      { label:'Bodega', path:'bodega', permission:'bodega.ver' },
+      { label:'Planificaci�n', path:'planificacion', permission:'planificacion.ver' },
+      { label:'Reportes', path:'reportes', permission:'reportes.ver' },
+      { label:'T�cnicos', path:'tecnicos', permission:'mantenimiento.ver' },
+      { label:'Usuarios', path:'usuarios', permission:'usuarios.ver' },
+      { label:'Documentos', path:'documentos', permission:'documentos.ver' },
+      { label:'Configuraci�n', path:'configuracion', permission:'configuracion.ver' },
+    ];
+
+    const appState = {
+      route:'dashboard',
+      currentUserId:'U001',
+      ordenes:[...appData.ordenes],
+      solicitudes:[...appData.solicitudes],
+      usuarios:[...appData.usuarios],
+      alertas:[...appData.alertas],
+      modal:null,
+      editingUserId:null,
+    };
+
+    const root = document.getElementById('pageContent');
+    const title = document.getElementById('pageTitle');
+    const subtitle = document.getElementById('pageSubtitle');
+    const sidebarNav = document.getElementById('sidebarNav');
+    const currentUserName = document.getElementById('currentUserName');
+    const currentUserPerms = document.getElementById('currentUserPerms');
+    const modalRoot = document.getElementById('modalRoot');
+
+    function currentUser() {
+      return appState.usuarios.find(u=>u.id===appState.currentUserId) || appState.usuarios[0];
+    }
+
+    function hasPermission(permission) {
+      if (!permission) return true;
+      return currentUser().permisos.includes(permission);
+    }
+
+    function setRoute(route) {
+      if (!routes.some(r=>r.path===route)) route='dashboard';
+      appState.route=route;
+      render();
+      window.location.hash='#/'+route;
+    }
+
+    function renderSidebar() {
+      sidebarNav.innerHTML='';
+      routes.forEach(route => {
+        if (!hasPermission(route.permission)) return;
+        const btn=document.createElement('button');
+        btn.className='nav-item'+(appState.route===route.path?' active':'');
+        btn.textContent=route.label;
+        btn.onclick=()=>setRoute(route.path);
+        sidebarNav.appendChild(btn);
+      });
+      const user=currentUser();
+      currentUserName.textContent=user.nombre;
+      currentUserPerms.innerHTML='';
+      user.permisos.forEach(p=>{
+        const span=document.createElement('span'); span.className='badge soft'; span.textContent=p; currentUserPerms.appendChild(span);
+      });
+    }
+
+    function render() {
+      renderSidebar();
+      renderPage();
+    }
+
+    function renderPage() {
+      const routeDef=routes.find(r=>r.path===appState.route);
+      title.textContent=routeDef?.label||'Panel';
+      subtitle.textContent='Ejecuta la aplicaci�n simulada en HTML directo.';
+      if (!routeDef || !hasPermission(routeDef.permission)) {
+        root.innerHTML='<div class="card"><p class="alert">No tienes permiso para acceder a esta vista.</p></div>';
+        return;
+      }
+      switch(appState.route) {
+        case 'dashboard': return renderDashboard();
+        case 'mantenimiento/ot': return renderMantenimientoOT();
+        case 'mantenimiento/sm': return renderMantenimientoSM();
+        case 'activos': return renderActivos();
+        case 'bodega': return renderBodega();
+        case 'planificacion': return renderPlanificacion();
+        case 'reportes': return renderReportes();
+        case 'tecnicos': return renderTecnicos();
+        case 'usuarios': return renderUsuarios();
+        case 'documentos': return renderDocuments();
+        case 'configuracion': return renderConfiguracion();
+        default: return renderDashboard();
+      }
+    }
+
+    function renderDashboard() {
+      root.innerHTML='';
+      const grid=document.createElement('div'); grid.className='grid grid-3';
+      appData.kpis.forEach(kpi=>{
+        const card=document.createElement('div'); card.className='card';
+        card.innerHTML=`<div class="section-title"><span>${kpi.label}</span><small>${kpi.trend}</small></div><div style="font-size:28px;font-weight:700;">${kpi.valor}</div>`;
+        grid.appendChild(card);
+      });
+      root.appendChild(grid);
+      const twoCols=document.createElement('div'); twoCols.className='grid grid-2'; twoCols.style.marginTop='24px';
+      const criticalCard=document.createElement('div'); criticalCard.className='card';
+      criticalCard.innerHTML='<div class="section-title"><span>OTs Cr�ticas</span><small>Presiona la fila para ir a OT</small></div>';
+      appState.ordenes.filter(o=>o.criticidad==='critica').forEach(ot=>{
+        const item=document.createElement('div'); item.style.padding='14px 0'; item.style.borderTop='1px solid #e2e8f0'; item.style.cursor='pointer';
+        item.innerHTML=`<strong>${ot.numero}</strong> � ${ot.equipo}<div class="small-text">${ot.descripcion}</div>`;
+        item.onclick=()=>setRoute('mantenimiento/ot');
+        criticalCard.appendChild(item);
+      });
+      const alertsCard=document.createElement('div'); alertsCard.className='card';
+      alertsCard.innerHTML='<div class="section-title"><span>Alertas activas</span><small>Estado del sistema</small></div>';
+      appState.alertas.forEach(alert=>{
+        const item=document.createElement('div'); item.style.padding='14px 0'; item.style.borderTop='1px solid #e2e8f0';
+        item.innerHTML=`<strong>${alert.titulo}</strong><div class="small-text">${alert.mensaje}</div><div style="margin-top:8px;"><span class="badge ${alert.tipo==='critica'?'red':'orange'}">${alert.tipo}</span><span class="badge soft">${alert.faena}</span></div>`;
+        alertsCard.appendChild(item);
+      });
+      twoCols.appendChild(criticalCard); twoCols.appendChild(alertsCard); root.appendChild(twoCols);
+    }
+
+    function renderMantenimientoOT() {
+      root.innerHTML='';
+      const panel=document.createElement('div'); panel.className='card';
+      panel.innerHTML='<div class="section-title"><span>�rdenes de Trabajo</span><small>Administraci�n de OT</small></div>';
+      const btn=createButton('Nueva OT'); btn.onclick=openNewOTModal; panel.appendChild(btn);
+      const table=document.createElement('table'); table.className='table';
+      table.innerHTML='<thead><tr><th>OT</th><th>Equipo</th><th>Faena</th><th>Estado</th><th>Cr�tic.</th><th>T�cnico</th></tr></thead>';
+      const tbody=document.createElement('tbody');
+      appState.ordenes.forEach(ot=>{
+        const row=document.createElement('tr'); row.innerHTML=`<td>${ot.numero}</td><td>${ot.equipo}</td><td>${ot.faena}</td><td>${statusBadge(ot.estado)}</td><td>${priorityBadge(ot.criticidad)}</td><td>${ot.tecnico||'-'}</td>`;
+        row.onclick=()=>openOTDetail(ot); row.style.cursor='pointer'; tbody.appendChild(row);
+      });
+      table.appendChild(tbody); panel.appendChild(table); root.appendChild(panel);
+    }
+
+    function renderMantenimientoSM() {
+      root.innerHTML='';
+      const panel=document.createElement('div'); panel.className='card';
+      panel.innerHTML='<div class="section-title"><span>Solicitudes SM</span><small>Solicitudes pendientes</small></div>';
+      const btn=createButton('Nueva SM'); btn.onclick=openNewSMModal; panel.appendChild(btn);
+      const table=document.createElement('table'); table.className='table';
+      table.innerHTML='<thead><tr><th>SM</th><th>Equipo</th><th>Estado</th><th>Cr�tic.</th><th>Solicitante</th></tr></thead>';
+      const tbody=document.createElement('tbody');
+      appState.solicitudes.forEach(sm=>{
+        const row=document.createElement('tr'); row.innerHTML=`<td>${sm.numero}</td><td>${sm.equipo}</td><td>${statusBadgeSM(sm.estado)}</td><td>${priorityBadge(sm.criticidad)}</td><td>${sm.solicitante}</td>`;
+        row.onclick=()=>openSMDetail(sm); row.style.cursor='pointer'; tbody.appendChild(row);
+      });
+      table.appendChild(tbody); panel.appendChild(table); root.appendChild(panel);
+    }
+
+    function renderActivos() {
+      root.innerHTML='';
+      const panel=document.createElement('div'); panel.className='card';
+      panel.innerHTML='<div class="section-title"><span>Activos</span><small>Vista de equipos</small></div>';
+      const cards=document.createElement('div'); cards.className='grid grid-2';
+      appData.equipos.forEach(eq=>{
+        const card=document.createElement('div'); card.className='user-card';
+        card.innerHTML=`<div style="font-weight:700;">${eq.nombre}</div><div class="small-text">${eq.codigo} � ${eq.faena}</div><div style="margin-top:12px;">${statusBadgeEquip(eq.estado)} ${priorityBadge(eq.criticidad)}</div>`;
+        cards.appendChild(card);
+      });
+      panel.appendChild(cards); root.appendChild(panel);
+    }
+
+    function renderBodega() {
+      root.innerHTML='<div class="card"><div class="section-title"><span>Bodega</span><small>Inventario y solicitudes</small></div><p class="small-text">Funcionalidad de bodega emulada en esta demo.</p></div>';
+    }
+
+    function renderPlanificacion() {
+      root.innerHTML='<div class="card"><div class="section-title"><span>Planificaci�n</span><small>Agenda semanal</small></div><div class="grid grid-2">' + ['Lunes','Martes','Mi�rcoles','Jueves','Viernes'].map(day=>`<div class="user-card"><strong>${day}</strong><p class="small-text">OTs planificadas</p></div>`).join('') + '</div></div>';
+    }
+
+    function renderReportes() {
+      root.innerHTML='<div class="card"><div class="section-title"><span>Reportes</span><small>Indicadores operativos</small></div><div class="grid grid-2">' + appData.kpis.map(k=>`<div class="user-card"><strong>${k.label}</strong><div style="margin-top:10px;font-size:22px;font-weight:700;">${k.valor}</div><div class="small-text">Tendencia ${k.trend}</div></div>`).join('') + '</div></div>';
+    }
+
+    function renderTecnicos() {
+      root.innerHTML='<div class="card"><div class="section-title"><span>T�cnicos</span><small>Capacidad y carga</small></div><table class="table"><thead><tr><th>Nombre</th><th>Faena</th><th>Especialidad</th><th>Carga</th></tr></thead><tbody>' + appData.tecnicos.map(t=>`<tr><td>${t.nombre}</td><td>${t.faena}</td><td>${t.especialidad}</td><td>${t.cargaSemanal}/${t.capacidad} hrs</td></tr>`).join('') + '</tbody></table></div>';
+    }
+
+    function renderUsuarios() {
+      root.innerHTML='';
+      const user = currentUser();
+      const panel=document.createElement('div'); panel.className='card';
+      panel.innerHTML='<div class="section-title"><span>Usuarios</span><small>Gesti�n de perfiles y permisos</small></div>';
+      const btn=createButton('Crear usuario'); btn.onclick=openUserModal; panel.appendChild(btn);
+      const currentUserCard=document.createElement('div'); currentUserCard.className='user-card'; currentUserCard.style.marginTop='20px';
+      currentUserCard.innerHTML=`<strong>Perfil actual</strong><div class="small-text">${user.nombre} � ${user.rol}</div><div class="tag-grid">${user.permisos.map(p=>`<span class="badge soft">${p}</span>`).join('')}</div>`;
+      panel.appendChild(currentUserCard);
+      const usersGrid=document.createElement('div'); usersGrid.className='grid grid-2'; usersGrid.style.marginTop='20px';
+      appState.usuarios.forEach(u=>{
+        const card=document.createElement('div'); card.className='user-card';
+        const editBtn=document.createElement('button'); editBtn.className='button secondary'; editBtn.textContent='Editar'; editBtn.onclick=()=>openEditUser(u.id);
+        card.innerHTML=`<div style="font-weight:700;">${u.nombre}</div><div class="small-text">${u.email}</div><div class="small-text">${u.rol}</div><div class="tag-grid">${u.permisos.map(p=>`<span class="badge soft">${p}</span>`).join('')}</div>`;
+        card.appendChild(editBtn);
+        usersGrid.appendChild(card);
+      });
+      panel.appendChild(usersGrid); root.appendChild(panel);
+    }
+
+    function renderDocuments() {
+      root.innerHTML='<div class="card"><div class="section-title"><span>Documentos</span><small>Gestiona manuales y procedimientos</small></div><p class="small-text">Esta secci�n funciona como demo de navegaci�n.</p></div>';
+    }
+
+    function renderConfiguracion() {
+      root.innerHTML='<div class="card"><div class="section-title"><span>Configuraci�n</span><small>Ajustes del sistema</small></div><p class="small-text">Funcionalidad de configuraci�n simulada.</p></div>';
+    }
+
+    function openNewOTModal() { appState.modal='newOt'; renderModal(); }
+    function openNewSMModal() { appState.modal='newSm'; renderModal(); }
+    function openUserModal() { appState.editingUserId=null; appState.modal='editUser'; renderModal(); }
+    function openEditUser(id) { appState.editingUserId=id; appState.modal='editUser'; renderModal(); }
+    function openOTDetail(ot) { appState.modal='detailOt'; renderModal(ot); }
+    function openSMDetail(sm) { appState.modal='detailSm'; renderModal(sm); }
+
+    function renderModal(item) {
+      modalRoot.innerHTML='';
+      if (!appState.modal) return;
+      const overlay=document.createElement('div'); overlay.className='modal-overlay';
+      const modal=document.createElement('div'); modal.className='modal';
+      const closeBtn=document.createElement('button'); closeBtn.className='modal-close'; closeBtn.textContent='�'; closeBtn.onclick=closeModal; modal.appendChild(closeBtn);
+
+      if (appState.modal==='newOt') {
+        modal.innerHTML += '<h2>Crear nueva OT</h2>' +
+          '<div class="form-grid"><input id="otEquipo" class="input" placeholder="Equipo" />' +
+          '<input id="otTecnico" class="input" placeholder="T�cnico asignado" />' +
+          '<input id="otCriticidad" class="input" placeholder="Criticidad (media/alta/critica)" />' +
+          '<textarea id="otDescripcion" class="textarea" placeholder="Descripci�n"></textarea>' +
+          '<button class="button primary" id="saveOt">Crear OT</button></div>';
+      } else if (appState.modal==='newSm') {
+        modal.innerHTML += '<h2>Crear nueva SM</h2>' +
+          '<div class="form-grid"><input id="smEquipo" class="input" placeholder="Equipo" />' +
+          '<input id="smSolicitante" class="input" placeholder="Solicitante" />' +
+          '<input id="smTipoFalla" class="input" placeholder="Tipo de falla" />' +
+          '<textarea id="smDescripcion" class="textarea" placeholder="Descripci�n"></textarea>' +
+          '<input id="smCriticidad" class="input" placeholder="Criticidad (media/alta/critica)" />' +
+          '<button class="button primary" id="saveSm">Crear SM</button></div>';
+      } else if (appState.modal==='editUser') {
+        const editing = appState.usuarios.find(u=>u.id===appState.editingUserId);
+        const nombre = editing ? editing.nombre : '';
+        const email = editing ? editing.email : '';
+        const rol = editing ? editing.rol : '';
+        const permisos = editing ? editing.permisos.join(', ') : '';
+        modal.innerHTML += `<h2>${editing ? 'Editar usuario' : 'Crear usuario'}</h2>` +
+          `<div class="form-grid"><input id="userNombre" class="input" placeholder="Nombre" value="${nombre}" />` +
+          `<input id="userEmail" class="input" placeholder="Email" value="${email}" />` +
+          `<input id="userRol" class="input" placeholder="Rol" value="${rol}" />` +
+          `<textarea id="userPermisos" class="textarea" placeholder="Permisos separados por coma">${permisos}</textarea>` +
+          `<button class="button primary" id="saveUser">Guardar usuario</button></div>`;
+      } else if (appState.modal==='detailOt') {
+        modal.innerHTML += `<h2>${item.numero}</h2><div class="small-text">${item.equipo} � ${item.faena}</div><div style="margin-top:14px;">${item.descripcion}</div><div style="margin-top:12px;">${statusBadge(item.estado)} ${priorityBadge(item.criticidad)}</div>`;
+      } else if (appState.modal==='detailSm') {
+        modal.innerHTML += `<h2>${item.numero}</h2><div class="small-text">${item.equipo} � ${item.faena}</div><div style="margin-top:14px;">${item.descripcion}</div><div style="margin-top:12px;">${statusBadgeSM(item.estado)} ${priorityBadge(item.criticidad)}</div>`;
+      }
+
+      overlay.appendChild(modal);
+      modalRoot.appendChild(overlay);
+
+      if (appState.modal==='newOt') document.getElementById('saveOt').onclick = saveOt;
+      if (appState.modal==='newSm') document.getElementById('saveSm').onclick = saveSm;
+      if (appState.modal==='editUser') document.getElementById('saveUser').onclick = saveUser;
+      overlay.onclick = e => { if (e.target===overlay) closeModal(); };
+    }
+
+    function saveOt() {
+      const equipo=document.getElementById('otEquipo').value.trim();
+      const tecnico=document.getElementById('otTecnico').value.trim();
+      const criticidad=document.getElementById('otCriticidad').value.trim() || 'media';
+      const descripcion=document.getElementById('otDescripcion').value.trim();
+      if (!equipo || !tecnico || !descripcion) return alert('Complete los campos.');
+      appState.ordenes.unshift({ id:'OT'+Date.now(), numero:'OT-2024-'+Math.floor(Math.random()*9000+1000), equipo, faena:'Faena Demo', descripcion, estado:'abierta', criticidad, tecnico });
+      closeModal(); render();
+    }
+
+    function saveSm() {
+      const equipo=document.getElementById('smEquipo').value.trim();
+      const solicitante=document.getElementById('smSolicitante').value.trim();
+      const tipoFalla=document.getElementById('smTipoFalla').value.trim();
+      const descripcion=document.getElementById('smDescripcion').value.trim();
+      const criticidad=document.getElementById('smCriticidad').value.trim() || 'media';
+      if (!equipo || !solicitante || !tipoFalla || !descripcion) return alert('Complete los campos.');
+      appState.solicitudes.unshift({ id:'SM'+Date.now(), numero:'SM-2024-'+Math.floor(Math.random()*9000+1000), equipo, faena:'Faena Demo', solicitante, fecha:'2026-06-16', tipoFalla, descripcion, criticidad, estado:'nueva' });
+      closeModal(); render();
+    }
+
+    function saveUser() {
+      const nombre=document.getElementById('userNombre').value.trim();
+      const email=document.getElementById('userEmail').value.trim();
+      const rol=document.getElementById('userRol').value.trim();
+      const permisos=document.getElementById('userPermisos').value.split(',').map(t=>t.trim()).filter(Boolean);
+      if (!nombre || !email || !rol) return alert('Complete los campos.');
+      if (appState.editingUserId) {
+        const user=appState.usuarios.find(u=>u.id===appState.editingUserId);
+        Object.assign(user,{ nombre,email,rol,permisos });
+      } else {
+        appState.usuarios.unshift({ id:'U'+Date.now(), nombre, email, rol, permisos });
+      }
+      closeModal(); render();
+    }
+
+    function closeModal() { appState.modal=null; appState.editingUserId=null; modalRoot.innerHTML=''; }
+
+    function createButton(text) { const btn=document.createElement('button'); btn.className='button primary'; btn.textContent=text; return btn; }
+    function priorityBadge(value) { return `<span class="badge ${value==='critica'?'red':value==='alta'?'orange':'soft'}">${value}</span>`; }
+    function statusBadge(value) { if (value==='abierta') return '<span class="badge blue">Abierta</span>'; if (value==='en_progreso') return '<span class="badge orange">En progreso</span>'; if (value==='cerrada') return '<span class="badge green">Cerrada</span>'; return `<span class="badge soft">${value}</span>`; }
+    function statusBadgeSM(value) { if (value==='nueva') return '<span class="badge blue">Nueva</span>'; if (value==='en_revision') return '<span class="badge orange">En revisi�n</span>'; if (value==='aprobada') return '<span class="badge green">Aprobada</span>'; return `<span class="badge soft">${value}</span>`; }
+    function statusBadgeEquip(value) { if (value==='disponible') return '<span class="badge green">Disponible</span>'; if (value==='detenido') return '<span class="badge red">Detenido</span>'; if (value==='operando') return '<span class="badge blue">Operando</span>'; return `<span class="badge soft">${value}</span>`; }
+
+    document.getElementById('resetDemo').onclick=()=>{ appState.ordenes=[...appData.ordenes]; appState.solicitudes=[...appData.solicitudes]; appState.usuarios=[...appData.usuarios]; appState.currentUserId='U001'; render(); };
+    window.addEventListener('hashchange', ()=>{ const route=window.location.hash.replace('#/','')||'dashboard'; if (routes.some(r=>r.path===route)) appState.route=route; render(); });
+    if (window.location.hash) { const route=window.location.hash.replace('#/',''); if (routes.some(r=>r.path===route)) appState.route=route; }
+    render();
+  </script>
+</body>
+</html>
